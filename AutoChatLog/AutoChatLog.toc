@@ -1,0 +1,6 @@
+## Interface: 100107
+## Title: AutoChatLog
+## Version: 1.0
+## Author: JBalkobsn
+## SavedVariables: AutoChatLogData
+AutoChatLog.lua
