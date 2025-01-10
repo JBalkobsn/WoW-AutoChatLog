@@ -1,76 +1,109 @@
--- Initialisiere die gespeicherte Variable, falls sie nicht existiert
-AutoChatLogData = AutoChatLogData or {}
+-- Tabelle mit registrierten Events
+local chatEvents = {
+    CHAT_MSG_SAY = "Say",
+    CHAT_MSG_YELL = "Yell",
+    CHAT_MSG_WHISPER = "Whisper",
+    CHAT_MSG_GUILD = "Guild",
+    CHAT_MSG_PARTY = "Party",
+    CHAT_MSG_RAID = "Raid",
+}
 
--- Tabelle für deduplizierte Nachrichten
-local lastLoggedMessages = {}
-
+-- Haupt-Frame für alle Events
 local frame = CreateFrame("Frame")
-frame:RegisterEvent("PLAYER_LOGIN")
-frame:RegisterEvent("PLAYER_LOGOUT") -- Speichern beim Spielende
 
--- Funktion zum Speichern von Nachrichten
-local function SaveLogEntry(message)
-    -- Prüfen, ob die Nachricht bereits geloggt wurde
-    if lastLoggedMessages[message] then
-        --print("Nachricht bereits geloggt: " .. message) -- Debug-Ausgabe
-        return
+-- Logging-Funktion
+local function LogChatMessage(event, message, sender)
+   -- Übersetze den Eventnamen in eine benutzerfreundliche Form
+   local friendlyName = chatEvents[event] or event
+
+   -- Nachricht formatieren und speichern
+   local formattedMessage = "[" .. friendlyName .. "] " .. sender .. ": " .. message
+--    print("Formatiere Nachricht:", formattedMessage) -- Debug-Ausgabe
+   table.insert(AutoChatLogData, formattedMessage)
+
+   -- Logs im UI aktualisieren
+   if AutoChatLog_UpdateLogs then
+       AutoChatLog_UpdateLogs()
+   else
+        print("AutoChatLog_UpdateLogs nicht verfügbar.") -- Debug-Ausgabe
     end
-
-    -- Nachricht in der gespeicherten Tabelle ablegen
-    table.insert(AutoChatLogData, message)
-    lastLoggedMessages[message] = true -- Nachricht als geloggt markieren
-    -- print("Nachricht gespeichert: " .. message) -- Debug-Ausgabe
 end
 
--- Funktion zum Filtern und Speichern von Spieler-Nachrichten
-local function FilterPlayerMessages(self, event, message, sender, ...)
-    -- print("Filter aufgerufen für Event: " .. event) -- Debug-Ausgabe
+function AutoChatLog_UpdateUIFromSavedVariables()
+    -- print("Aktualisiere UI mit geladenen Daten.") -- Debug-Ausgabe
 
-    -- Spielername ermitteln (für eigene Nachrichten)
-    local playerName = UnitName("player")
-
-    -- Nachricht formatieren (für eigene und andere Spieler)
-    local logMessage
-    if sender == playerName or sender == nil then
-        -- Eigene Nachricht
-        logMessage = date("%m/%d %H:%M:%S") .. " (Du): " .. message
+    -- Tab: Einstellungen
+    if AutoChatLogSettings and AutoChatLog_UpdateSettingsTab then
+        AutoChatLog_UpdateSettingsTab()
     else
-        -- Nachricht von anderen Spielern
-        logMessage = date("%m/%d %H:%M:%S") .. " " .. (sender or "Unbekannt") .. ": " .. message
+        print("Einstellungen können nicht aktualisiert werden.") -- Debug-Ausgabe
     end
 
-    -- Nachricht speichern
-    SaveLogEntry(logMessage)
-    return false -- Nachricht im Chat anzeigen
+    -- Tab: Logs
+    if AutoChatLog_UpdateLogs then
+        AutoChatLog_UpdateLogs()
+    else
+        print("Logs können nicht aktualisiert werden.") -- Debug-Ausgabe
+    end
 end
 
-frame:SetScript("OnEvent", function(self, event, ...)
-    if event == "PLAYER_LOGIN" then
-        print("AutoChatLog wurde geladen und Nachrichten werden gespeichert.")
 
-        -- Liste aller relevanten Chat-Ereignisse
-        local chatEvents = {
-            "CHAT_MSG_SAY",
-            "CHAT_MSG_YELL",
-            "CHAT_MSG_WHISPER",
-            "CHAT_MSG_BN_WHISPER",
-            "CHAT_MSG_PARTY",
-            "CHAT_MSG_PARTY_LEADER",
-            "CHAT_MSG_RAID",
-            "CHAT_MSG_RAID_LEADER",
-            "CHAT_MSG_GUILD",
-            "CHAT_MSG_OFFICER",
-            "CHAT_MSG_INSTANCE_CHAT",
-            "CHAT_MSG_INSTANCE_CHAT_LEADER",
-            "CHAT_MSG_CHANNEL"
-        }
+-- Event-Callback
+local function OnEvent(self, event, ...)
+    if event == "ADDON_LOADED" then
+        local addonName = ...
+        if addonName == "AutoChatLog" then
+            -- Initialisiere SavedVariables
+            -- InitializeSavedVariables()
+            AutoChatLogData = AutoChatLogData or {}
 
-        -- Filter auf alle relevanten Ereignisse anwenden
-        for _, event in pairs(chatEvents) do
-            ChatFrame_AddMessageEventFilter(event, FilterPlayerMessages)
+            AutoChatLogSettings = AutoChatLogSettings or {
+                say = true,
+                yell = true,
+                whisper = true,
+                guild = true,
+                party = true,
+                raid = true,
+            }
+
+            -- Initialisiere Logging-Events
+            for chatEvent, _ in pairs(chatEvents) do
+                frame:RegisterEvent(chatEvent)
+            end
+
+            -- Aktualisiere das UI
+            AutoChatLog_UpdateUIFromSavedVariables()
+
+            -- UI initialisieren
+            AutoChatLog_UI_Initialize()
+            
+            -- Entferne das ADDON_LOADED-Event
+            frame:UnregisterEvent("ADDON_LOADED")
+
+            print("AutoChatLog wurde geladen.")
         end
-    elseif event == "PLAYER_LOGOUT" then
-        -- Daten speichern beim Logout
-        print("Speichere AutoChatLog-Daten...")
+    elseif event:match("^CHAT_MSG_") then
+        local message, sender = ...
+        -- print("Event empfangen:", event, "Nachricht:", message, "Sender:", sender) -- Debug-Ausgabe
+
+        -- Nachrichtentyp bestimmen
+        local messageType = chatEvents[event]
+        -- print("Nachrichtentyp erkannt:", messageType) -- Debug-Ausgabe
+
+        if messageType and AutoChatLogSettings[messageType] then
+            LogChatMessage(event, message, sender)
+        else
+            print("Nachrichtentyp deaktiviert oder unbekannt:", messageType) -- Debug-Ausgabe
+        end
     end
-end)
+end
+
+-- Eventhandler setzen
+frame:RegisterEvent("ADDON_LOADED")
+frame:SetScript("OnEvent", OnEvent)
+
+-- Slash-Befehl für das UI
+SLASH_AUTOCHATLOG1 = "/chatlogui"
+SlashCmdList["AUTOCHATLOG"] = function()
+    AutoChatLog_UI_Toggle()
+end
