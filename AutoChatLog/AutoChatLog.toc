@@ -1,6 +1,9 @@
-## Interface: 100107
+## Interface: 110007
 ## Title: AutoChatLog
-## Version: 1.0
+## Version: 1.0.1
 ## Author: JBalkobsn
-## SavedVariables: AutoChatLogData
+## SavedVariables: AutoChatLogData, AutoChatLogSettings
 AutoChatLog.lua
+AutoChatLog_UI.lua
+AutoChatLog_Tab_Settings.lua
+AutoChatLog_Tab_Logs.lua
