@@ -4,23 +4,29 @@ settingsContent:SetAllPoints()
 
 -- Nachrichtentypen und Labels
 local messageTypes = {
-    { key = "Say", label = "Sagen" },
-    { key = "Yell", label = "Schreien" },
-    { key = "Whisper", label = "Flüstern" },
-    { key = "Guild", label = "Gilde" },
-    { key = "Party", label = "Gruppe" },
-    { key = "Raid", label = "Schlachtzug" },
+    { key = "Say",       label = "Say" },
+    { key = "Yell",      label = "Yell" },
+    { key = "Whisper",   label = "Whisper" },
+    { key = "BattleNet", label = "Battle-Net" },
+    { key = "Party",     label = "Party" },
+    { key = "Raid",      label = "Raid" },
+    { key = "Guild",     label = "Guild" },
+    { key = "Instance",  label = "Instance" },
+    { key = "Channel",   label = "Channel" }
 }
 
 local checkboxes = {}
 
-AutoChatLogSettings = AutoChatLogSettings or {
+_G.AutoChatLogSettings = _G.AutoChatLogSettings or {
     Say = true,
     Yell = true,
     Whisper = true,
-    Guild = true,
+    BattleNet = true,
     Party = true,
     Raid = true,
+    Guild = true,
+    Instance = true,
+    Channel = true
 }
 
 -- Checkboxen erstellen
@@ -30,10 +36,10 @@ for i, msgType in ipairs(messageTypes) do
     checkbox.Text:SetText(msgType.label)
 
     -- Checkbox-Status basierend auf gespeicherten Einstellungen setzen
-    checkbox:SetChecked(AutoChatLogSettings[msgType.key] ~= false)
+    checkbox:SetChecked(_G.AutoChatLogSettings[msgType.key] ~= false)
 
     checkbox:SetScript("OnClick", function(self)
-        AutoChatLogSettings[msgType.key] = self:GetChecked()
+        _G.AutoChatLogSettings[msgType.key] = self:GetChecked()
         print(msgType.label .. " ist " .. (self:GetChecked() and "aktiviert" or "deaktiviert"))
     end)
 
@@ -44,8 +50,8 @@ function AutoChatLog_UpdateSettingsTab()
     -- print("Aktualisiere Einstellungen-Tab.") -- Debug-Ausgabe
 
     for key, checkbox in pairs(checkboxes) do
-        if AutoChatLogSettings[key] ~= nil then
-            checkbox:SetChecked(AutoChatLogSettings[key])
+        if _G.AutoChatLogSettings[key] ~= nil then
+            checkbox:SetChecked(_G.AutoChatLogSettings[key])
         else
             -- print("Kein Wert für Checkbox:", key) -- Debug-Ausgabe
         end

@@ -1,8 +1,14 @@
 ## Interface: 110007
+
 ## Title: AutoChatLog
-## Version: 1.0.1
+
+## Notes: Small logging addon for chat messages by JBalkobsn.
+
+## Version: 1.0.3
 ## Author: JBalkobsn
 ## SavedVariables: AutoChatLogData, AutoChatLogSettings
+
+AutoChatLog_Library.lua
 AutoChatLog.lua
 AutoChatLog_UI.lua
 AutoChatLog_Tab_Settings.lua

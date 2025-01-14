@@ -1,9 +1,8 @@
 -- Debug-Ausgabe, um zu prüfen, ob die Datei geladen wird
 -- print("AutoChatLog_UI.lua wurde geladen.")
-
 -- Hauptfenster für das UI
 local AutoChatLogUI = CreateFrame("Frame", "AutoChatLogUIFrame", UIParent, "BasicFrameTemplateWithInset")
-AutoChatLogUI:SetSize(500, 400) -- Breite, Höhe
+AutoChatLogUI:SetSize(500, 400)  -- Breite, Höhe
 AutoChatLogUI:SetPoint("CENTER") -- Position
 AutoChatLogUI:SetMovable(true)
 AutoChatLogUI:EnableMouse(true)
