@@ -2,13 +2,13 @@
 
 ## Title: AutoChatLog
 
-## Notes: Small logging addon for chat messages by JBalkobsn.
+## Notes: Lightweight addon for automatically logging chat messages by type and date, with customizable settings and an UI for viewing and managing logs.
 
-## Version: 1.0.3
+## Version: 1.0.4
 ## Author: JBalkobsn
 ## SavedVariables: AutoChatLogData, AutoChatLogSettings
 
-AutoChatLog_Library.lua
+Libs/AutoChatLog_Library.lua
 AutoChatLog.lua
 AutoChatLog_UI.lua
 AutoChatLog_Tab_Settings.lua

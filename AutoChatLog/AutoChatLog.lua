@@ -1,12 +1,12 @@
 ----------------------------------------------------------------------
--- 	AutoChatLog 1.0.2 (12th January 2025)
+-- 	AutoChatLog 1.0.4 (24th January 2025)
 ----------------------------------------------------------------------
 
---	01:Functions 02:Locks,  03:Restart 40:Player
---	60:Events    62:Profile 70:Logout  80:Commands, 90:Panel
+--  01:Variables,   02:Event-Registration,  03:Functions
+--  04:Player,      05:Event-Handler,       06:Commands
 
 ----------------------------------------------------------------------
--- 	AutoChatLog
+--  01: Variables
 ----------------------------------------------------------------------
 
     -- Create global tables
@@ -19,7 +19,7 @@
         Raid = true,
         Guild = true,
         Instance = true,
-        Channel = true
+        Channel = false
     }
 
     _G.AutoChatLogData = _G.AutoChatLogData or {}
@@ -44,8 +44,15 @@
 
     local AclLC = {}
 
+    if not _G.AutoChatLogSettings.width then
+        _G.AutoChatLogSettings.width = 500 -- Standardbreite
+    end
+    if not _G.AutoChatLogSettings.height then
+        _G.AutoChatLogSettings.height = 400 -- Standardhöhe
+    end
+
 ----------------------------------------------------------------------
---	A00: AutoChatLog
+--  02: Event-Registration
 ----------------------------------------------------------------------
 
     -- Create event frame
@@ -59,17 +66,28 @@
     end
 
 ----------------------------------------------------------------------
---	A01: Functions
+--  03: Functions
 ----------------------------------------------------------------------
+
+    -- Gets the current date for logs
+    function GetCurrentDate()
+        return date("%Y/%m/%d")
+    end
 
     -- Log chat message
     local function LogChatMessage(event, message, sender)
+        local currentDate = GetCurrentDate()
+        local timestamp = date("%H:%M:%S")
+
+        if not _G.AutoChatLogData[currentDate] then
+            _G.AutoChatLogData[currentDate] = {}
+        end
         -- Translate event name in user friendly format
         local friendlyName = AclChatEvents[event] or event
 
         -- Save and format message
-        local formattedMessage = "[" .. friendlyName .. "] " .. sender .. ": " .. message
-        table.insert(AutoChatLogData, formattedMessage)
+        local formattedMessage = "[" .. timestamp .. "] [" .. friendlyName .. "] " .. sender .. ": " .. message
+        table.insert(AutoChatLogData[currentDate], formattedMessage)
 
         -- Update logs in UI
         if AutoChatLog_UpdateLogs then
@@ -85,19 +103,19 @@
         if AutoChatLogSettings and AutoChatLog_UpdateSettingsTab then
             AutoChatLog_UpdateSettingsTab()
         else
-            print("[AutoChatLog Error] Could'nt update settings.")
+            print("[AutoChatLog Error] Couldn't update settings.")
         end
 
         -- Tab: Logs
         if AutoChatLog_UpdateLogs then
             AutoChatLog_UpdateLogs()
         else
-            print("[AutoChatLog Error] Could'nt update logs.")
+            print("[AutoChatLog Error] Couldn't update logs.")
         end
     end
 
 ----------------------------------------------------------------------
---	L40: Player
+--  04: Player
 ----------------------------------------------------------------------
 
     function AclLC:Player()
@@ -134,7 +152,7 @@
     end
 
 ----------------------------------------------------------------------
---	A01: Events
+--  05: Event-Handler
 ----------------------------------------------------------------------
 
     -- Event-Callback
@@ -155,14 +173,13 @@
             end
         elseif event:match("^CHAT_MSG_") then
             local message, sender = ...
-
             -- Evaluate message type
             local messageType = AclChatEvents[event]
 
-            if messageType then --and AutoChatLogSettings[messageType] then
+            if messageType and _G.AutoChatLogSettings[messageType] then
                 LogChatMessage(event, message, sender)
             else
-                print("[AutoChatLog Error] Unknown message type:", messageType)
+                -- print("[AutoChatLog Error] Unknown message type:", messageType)
             end
         elseif event == "PLAYER_LOGIN" then
 			AclLC:Player()
@@ -175,7 +192,7 @@
     AutoChatLogEvt:SetScript("OnEvent", eventHandler)
 
 ----------------------------------------------------------------------
--- 	Commands
+--  06: Commands
 ----------------------------------------------------------------------
 
     -- Slash command to open the UI
